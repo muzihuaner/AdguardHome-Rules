@@ -29,6 +29,7 @@ block_source_urls = {
     "10007_auto": "https://raw.githubusercontent.com/lingeringsound/10007_auto/master/reward",
     "AWAvenue-Ads-Rule": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/AWAvenue-Ads-Rule.txt",
     "github520": "https://raw.hellogithub.com/hosts",
+    "冷漠的黑名单pro": "https://github.com/Potterli20/file/releases/download/ad-hosts-pro/ad-adguardhome.txt",
     "Menghuibanxian": "https://raw.githubusercontent.com/Menghuibanxian/AdguardHome/refs/heads/main/Black.txt"
 }
 
@@ -49,13 +50,13 @@ white_source_urls = {
 custom_block_file = "my-blocklist.txt"
 custom_white_file = "my-whitelist.txt"
 
-# 输出文件名（可通过环境变量覆盖）
+# 输出文件名（通过环境变量覆盖为 radical-*.txt）
 block_filename = os.environ.get("OUTPUT_BLOCK_FILENAME", "Black.txt")
 white_filename = os.environ.get("OUTPUT_WHITE_FILENAME", "White.txt")
 block_output_file = os.path.join(root_dir, block_filename)
 white_output_file = os.path.join(root_dir, white_filename)
 
-# README 开头标题（可通过环境变量覆盖）
+# README 开头标题（通过环境变量控制：radical 分支使用“激进的规则”）
 readme_title = os.environ.get("README_TITLE", "平稳的规则")
 
 # ===================== 脚本区 =====================
@@ -174,7 +175,7 @@ def write_rules_to_file(filename: str, rules_dict: dict, title: str, description
 
 def update_readme(block_rules_dict: dict, white_rules_dict: dict):
     """生成并更新 README.md 文件（raw 链接按当前分支）"""
-    print(f"\n正在更新 {os.path.basename(readme_file)}...")
+    print(f"\n正在更新 {os.path.basename(os.path.join(root_dir, 'README.md'))}...")
     repo_name = os.environ.get("GITHUB_REPOSITORY", "your_username/your_repo")
 
     # 动态获取分支名
