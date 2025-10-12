@@ -1,15 +1,22 @@
-name: 平稳的规则
+name: 激进的规则
 
 permissions:
   contents: write
 
 on:
-  # 定时更新已由 main 分支的矩阵任务统一执行
+  push:
+    branches:
+      - radical
   workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
 
 jobs:
   build-and-commit-radical:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-radical
+      cancel-in-progress: true
 
     steps:
       - name: Checkout repository (radical)
@@ -24,11 +31,11 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: |
+        run: \vert{}
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Run script to build lists and update README
+      - name: Build lists and update README
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF_NAME: radical
@@ -49,10 +56,15 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "radical-Black.txt,radical-White.txt"
 
-      - name: Commit and push README only
-        run: |
+      - name: Commit and push README only (safe rebase)
+        run: \vert{}
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
+
+          git fetch origin radical
+          git config --global pull.rebase true
+          git config --global rebase.autoStash true
+          git pull --rebase origin radical \vert{}\vert{} true
 
           git add README.md
           if git diff --cached --quiet; then
@@ -60,11 +72,17 @@ jobs:
             exit 0
           fi
 
-          BLOCK_COUNT=$(grep -v -c '^!' radical-Black.txt \vert{}\vert{} echo 0)
-          WHITE_COUNT=$(grep -v -c '^!' radical-White.txt || echo 0)
+          BLOCK_COUNT=$(grep -v -c '^!' radical-Black.txt || echo 0)
+          WHITE_COUNT=$(grep -v -c '^!' radical-White.txt \vert{}\vert{} echo 0)
 
           git commit -m "chore: 更新 README (radical)" \
                      -m "黑名单规则: ${BLOCK_COUNT} 条" \
                      -m "白名单规则: ${WHITE_COUNT} 条"
 
-          git push origin "HEAD:radical"
+          git fetch origin radical
+          git pull --rebase origin radical || true
+
+          git push origin "HEAD:radical" || {
+            echo "First push failed, attempting with --force-with-lease"
+            git push --force-with-lease origin "HEAD:radical"
+          }
