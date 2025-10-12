@@ -50,18 +50,21 @@ white_source_urls = {
 custom_block_file = "my-blocklist.txt"
 custom_white_file = "my-whitelist.txt"
 
-# 输出文件名（通过环境变量覆盖为 radical-*.txt）
+# 输出文件名（可通过环境变量覆盖）
 block_filename = os.environ.get("OUTPUT_BLOCK_FILENAME", "Black.txt")
 white_filename = os.environ.get("OUTPUT_WHITE_FILENAME", "White.txt")
 block_output_file = os.path.join(root_dir, block_filename)
 white_output_file = os.path.join(root_dir, white_filename)
 
-# README 开头标题（通过环境变量控制：radical 分支使用“激进的规则”）
+# README 开头标题（可通过环境变量覆盖）
 readme_title = os.environ.get("README_TITLE", "平稳的规则")
+
+# 若设置 RELEASE_TAG，则 README 链接会使用 Releases 直链
+release_tag = os.environ.get("RELEASE_TAG")
 
 # ===================== 脚本区 =====================
 
-def download_file(url: str, friendly_name: str) -> str | None:
+def download_file(url: str, friendly_name: str):
     """下载指定 URL 的内容"""
     try:
         print(f"  正在下载: {friendly_name}")
@@ -174,17 +177,17 @@ def write_rules_to_file(filename: str, rules_dict: dict, title: str, description
         print(f"写入文件失败: {filename}, 错误: {e}")
 
 def update_readme(block_rules_dict: dict, white_rules_dict: dict):
-    """生成并更新 README.md 文件（raw 链接按当前分支）"""
-    print(f"\n正在更新 {os.path.basename(os.path.join(root_dir, 'README.md'))}...")
+    """生成并更新 README.md 文件（链接默认指向 Releases 资源；若无 RELEASE_TAG 则用 raw 链接）"""
+    print("\n正在更新 README.md...")
     repo_name = os.environ.get("GITHUB_REPOSITORY", "your_username/your_repo")
+    branch_name = os.environ.get("GITHUB_REF_NAME") or "main"
 
-    # 动态获取分支名
-    branch_name = os.environ.get("GITHUB_REF_NAME")
-    if not branch_name:
-        ref = os.environ.get("GITHUB_REF", "refs/heads/main")
-        branch_name = ref.split("/")[-1] if ref else "main"
-
-    raw_url_base = f"https://raw.githubusercontent.com/{repo_name}/{branch_name}"
+    if release_tag:
+        # 指向固定的 Release 资源
+        base_url = f"https://github.com/{repo_name}/releases/download/{release_tag}"
+    else:
+        # 退回 raw（不推荐用于大文件）
+        base_url = f"https://raw.githubusercontent.com/{repo_name}/{branch_name}"
 
     beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
     now_beijing = datetime.datetime.now(beijing_tz)
@@ -222,13 +225,13 @@ def update_readme(block_rules_dict: dict, white_rules_dict: dict):
 拦截规则 (Blocklist)
 
 {code_fence}
-{raw_url_base}/{os.path.basename(block_output_file)}
+{base_url}/{os.path.basename(block_output_file)}
 {code_fence}
 
 允许规则 (Whitelist)
 
 {code_fence}
-{raw_url_base}/{os.path.basename(white_output_file)}
+{base_url}/{os.path.basename(white_output_file)}
 {code_fence}
 
 规则来源
