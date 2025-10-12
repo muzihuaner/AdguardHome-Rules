@@ -49,16 +49,16 @@ white_source_urls = {
 custom_block_file = "my-blocklist.txt"
 custom_white_file = "my-whitelist.txt"
 
-# 输出文件名（可通过环境变量覆盖）
+# 输出文件名（通过环境变量覆盖）
 block_filename = os.environ.get("OUTPUT_BLOCK_FILENAME", "Black.txt")
 white_filename = os.environ.get("OUTPUT_WHITE_FILENAME", "White.txt")
 block_output_file = os.path.join(root_dir, block_filename)
 white_output_file = os.path.join(root_dir, white_filename)
 
-# README 开头标题（可通过环境变量覆盖）
+# README 开头标题（通过环境变量覆盖）
 readme_title = os.environ.get("README_TITLE", "平稳的规则")
 
-# 若设置 RELEASE_TAG，则 README 链接会使用 Releases 直链
+# Release 标签（用于 README 直链）
 release_tag = os.environ.get("RELEASE_TAG")
 
 # ===================== 脚本区 =====================
@@ -82,32 +82,26 @@ def process_line(line: str) -> str:
     """清洗单行规则，提取域名"""
     line = line.strip()
 
-    # 忽略空行和注释
     if not line or line.startswith(('!', '#', '/', '[', '@')):
         return ""
 
-    # 移除 AdGuard 修饰符和语法
     line = line.replace("@@", "").replace("||", "").replace("^", "")
     if "$" in line:
         line = line.split("$", 1)[0]
 
-    # 移除通配符前缀
     if line.startswith("*."):
         line = line[2:]
     if line.startswith("."):
         line = line[1:]
 
-    # 处理 hosts 格式
     if line.startswith("0.0.0.0 ") or line.startswith("127.0.0.1 "):
         parts = line.split()
         if len(parts) >= 2:
             line = parts[1]
 
-    # 过滤无效规则
     if "." not in line or " " in line or "<" in line or "/" in line:
         return ""
 
-    # 过滤本地主机
     if line in {"localhost", "127.0.0.1", "0.0.0.0"}:
         return ""
 
@@ -176,22 +170,19 @@ def write_rules_to_file(filename: str, rules_dict: dict, title: str, description
         print(f"写入文件失败: {filename}, 错误: {e}")
 
 def update_readme(block_rules_dict: dict, white_rules_dict: dict):
-    """生成并更新 README.md 文件（链接默认指向 Releases 资源；若无 RELEASE_TAG 则用 raw 链接）"""
+    """生成并更新 README.md 文件（链接指向 Release 资源）"""
     print("\n正在更新 README.md...")
     repo_name = os.environ.get("GITHUB_REPOSITORY", "your_username/your_repo")
     branch_name = os.environ.get("GITHUB_REF_NAME") or "main"
 
     if release_tag:
-        # 指向固定的 Release 资源
         base_url = f"https://github.com/{repo_name}/releases/download/{release_tag}"
     else:
-        # 退回 raw（不推荐用于大文件）
         base_url = f"https://raw.githubusercontent.com/{repo_name}/{branch_name}"
 
     beijing_tz = datetime.timezone(datetime.timedelta(hours=8))
     now_beijing = datetime.datetime.now(beijing_tz)
 
-    # 将本地自定义源也加入显示列表
     all_block_sources = list(block_source_urls.keys())
     if os.path.exists(os.path.join(script_dir, custom_block_file)):
         all_block_sources.append("Custom Blocklist (本地)")
@@ -256,12 +247,10 @@ def main():
     """主执行函数"""
     print("--- 开始处理白名单 ---")
     white_rules_dict = process_urls_to_dict(white_source_urls)
-    # 合并本地自定义白名单
     white_rules_dict.update(process_local_file(custom_white_file, "Custom Whitelist"))
 
     print("\n--- 开始处理黑名单 ---")
     block_rules_dict = process_urls_to_dict(block_source_urls)
-    # 合并本地自定义黑名单
     block_rules_dict.update(process_local_file(custom_block_file, "Custom Blocklist"))
 
     print("\n--- 最终处理 ---")
@@ -269,7 +258,6 @@ def main():
     print(f"合并后黑名单共: {initial_block_count} 条")
     print(f"合并后白名单共: {len(white_rules_dict)} 条")
 
-    # 从黑名单中排除白名单
     final_block_rules_dict = {
         rule: source
         for rule, source in block_rules_dict.items()
@@ -282,7 +270,6 @@ def main():
     print(f"从黑名单中移除了 {removed_count} 条白名单规则。")
     print(f"最终生效黑名单共: {final_block_count} 条。")
 
-    # 写出文件
     write_rules_to_file(
         block_output_file,
         final_block_rules_dict,
@@ -298,7 +285,6 @@ def main():
         "zhuanshenlikaini",
     )
 
-    # 更新 README
     update_readme(final_block_rules_dict, white_rules_dict)
 
 if __name__ == "__main__":
