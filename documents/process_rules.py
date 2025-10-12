@@ -53,8 +53,8 @@ custom_block_file = "my-blocklist.txt"
 custom_white_file = "my-whitelist.txt"
 
 # 3. 输出文件路径 (输出到项目的根目录)
-block_output_file = os.path.join(root_dir, "Black.txt")
-white_output_file = os.path.join(root_dir, "White.txt")
+block_output_file = os.path.join(root_dir, "-radical-Black.txt")
+white_output_file = os.path.join(root_dir, "-radical-White.txt")
 readme_file = os.path.join(root_dir, "README.md")
 
 # --- 脚本区 ---
