@@ -1,6 +1,6 @@
 # .github/workflows/update-rules.yml
 
-name: Update AdGuard Rules
+name: 激进的规则
 
 permissions:
   contents: write
