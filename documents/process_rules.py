@@ -29,7 +29,6 @@ block_source_urls = {
     "10007_auto": "https://raw.githubusercontent.com/lingeringsound/10007_auto/master/reward",
     "AWAvenue-Ads-Rule": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/AWAvenue-Ads-Rule.txt",
     "github520": "https://raw.hellogithub.com/hosts",
-    "冷漠的黑名单pro": "https://github.com/Potterli20/file/releases/download/ad-hosts-pro/ad-adguardhome.txt",
     "Menghuibanxian": "https://raw.githubusercontent.com/Menghuibanxian/AdguardHome/refs/heads/main/Black.txt"
 }
 
@@ -50,12 +49,14 @@ white_source_urls = {
 custom_block_file = "my-blocklist.txt"
 custom_white_file = "my-whitelist.txt"
 
-# 输出文件（输出到项目根目录，包含 radical 字样）
-BLOCK_FILENAME = "radical-Black.txt"
-WHITE_FILENAME = "radical-White.txt"
-block_output_file = os.path.join(root_dir, BLOCK_FILENAME)
-white_output_file = os.path.join(root_dir, WHITE_FILENAME)
-readme_file = os.path.join(root_dir, "README.md")
+# 输出文件名（可通过环境变量覆盖）
+block_filename = os.environ.get("OUTPUT_BLOCK_FILENAME", "Black.txt")
+white_filename = os.environ.get("OUTPUT_WHITE_FILENAME", "White.txt")
+block_output_file = os.path.join(root_dir, block_filename)
+white_output_file = os.path.join(root_dir, white_filename)
+
+# README 开头标题（可通过环境变量覆盖）
+readme_title = os.environ.get("README_TITLE", "平稳的规则")
 
 # ===================== 脚本区 =====================
 
@@ -179,7 +180,6 @@ def update_readme(block_rules_dict: dict, white_rules_dict: dict):
     # 动态获取分支名
     branch_name = os.environ.get("GITHUB_REF_NAME")
     if not branch_name:
-        # 兼容 GITHUB_REF 格式：refs/heads/<branch>
         ref = os.environ.get("GITHUB_REF", "refs/heads/main")
         branch_name = ref.split("/")[-1] if ref else "main"
 
@@ -202,7 +202,9 @@ def update_readme(block_rules_dict: dict, white_rules_dict: dict):
 
     code_fence = "```"
 
-    readme_content = f"""# 自动更新的 AdGuard Home 规则
+    readme_content = f"""# {readme_title}
+
+# 自动更新的 AdGuard Home 规则
 
 项目作者: zhuanshenlikaini
 
@@ -241,25 +243,23 @@ def update_readme(block_rules_dict: dict, white_rules_dict: dict):
 由 GitHub Actions 自动构建。
 """
     try:
-        with open(readme_file, "w", encoding="utf-8") as f:
+        with open(os.path.join(root_dir, "README.md"), "w", encoding="utf-8") as f:
             f.write(readme_content)
-        print(f"{os.path.basename(readme_file)} 更新成功！")
+        print("README.md 更新成功！")
     except IOError as e:
-        print(f"写入 {readme_file} 失败: {e}")
+        print(f"写入 README.md 失败: {e}")
 
 def main():
     """主执行函数"""
     print("--- 开始处理白名单 ---")
     white_rules_dict = process_urls_to_dict(white_source_urls)
     # 合并本地自定义白名单
-    custom_white_rules = process_local_file(custom_white_file, "Custom Whitelist")
-    white_rules_dict.update(custom_white_rules)
+    white_rules_dict.update(process_local_file(custom_white_file, "Custom Whitelist"))
 
     print("\n--- 开始处理黑名单 ---")
     block_rules_dict = process_urls_to_dict(block_source_urls)
     # 合并本地自定义黑名单
-    custom_block_rules = process_local_file(custom_block_file, "Custom Blocklist")
-    block_rules_dict.update(custom_block_rules)
+    block_rules_dict.update(process_local_file(custom_block_file, "Custom Blocklist"))
 
     print("\n--- 最终处理 ---")
     initial_block_count = len(block_rules_dict)
@@ -279,23 +279,23 @@ def main():
     print(f"从黑名单中移除了 {removed_count} 条白名单规则。")
     print(f"最终生效黑名单共: {final_block_count} 条。")
 
-    # 写出文件（包含 radical 字样）
+    # 写出文件
     write_rules_to_file(
         block_output_file,
         final_block_rules_dict,
-        "AdGuard Custom Blocklist (radical)",
+        "AdGuard Custom Blocklist",
         "自动合并的广告拦截规则",
         "zhuanshenlikaini",
     )
     write_rules_to_file(
         white_output_file,
         white_rules_dict,
-        "AdGuard Custom Whitelist (radical)",
+        "AdGuard Custom Whitelist",
         "自动合并的白名单规则",
         "zhuanshenlikaini",
     )
 
-    # 更新 README（链接指向当前分支的 radical-Black.txt / radical-White.txt）
+    # 更新 README
     update_readme(final_block_rules_dict, white_rules_dict)
 
 if __name__ == "__main__":
