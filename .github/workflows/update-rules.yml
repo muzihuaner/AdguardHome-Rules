@@ -45,11 +45,16 @@ jobs:
           RELEASE_TAG: stable-latest
         run: python documents/process_rules.py
 
+      - name: Compute Beijing time for release title
+        id: time
+        run: |
+          echo "cn_time=$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S (UTC+8)')" >> $GITHUB_OUTPUT
+
       - name: Upload lists to GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: stable-latest
-          name: "平稳的规则 Latest"
+          name: "平稳的规则 ${{ steps.time.outputs.cn_time }}"
           makeLatest: true
           allowUpdates: true
           replacesArtifacts: true
