@@ -31,7 +31,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: \vert{}
+        run: |
           python -m pip install --upgrade pip
           pip install requests
 
@@ -45,11 +45,16 @@ jobs:
           RELEASE_TAG: radical-latest
         run: python documents/process_rules.py
 
+      - name: Compute Beijing time for release title
+        id: time
+        run: |
+          echo "cn_time=$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M:%S (UTC+8)')" >> $GITHUB_OUTPUT
+
       - name: Upload lists to GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: radical-latest
-          name: "激进的规则 Latest"
+          name: "激进的规则 ${{ steps.time.outputs.cn_time }}"
           makeLatest: true
           allowUpdates: true
           replacesArtifacts: true
@@ -57,14 +62,14 @@ jobs:
           artifacts: "radical-Black.txt,radical-White.txt"
 
       - name: Commit and push README only (safe rebase)
-        run: \vert{}
+        run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
 
           git fetch origin radical
           git config --global pull.rebase true
           git config --global rebase.autoStash true
-          git pull --rebase origin radical \vert{}\vert{} true
+          git pull --rebase origin radical || true
 
           git add README.md
           if git diff --cached --quiet; then
@@ -73,7 +78,7 @@ jobs:
           fi
 
           BLOCK_COUNT=$(grep -v -c '^!' radical-Black.txt || echo 0)
-          WHITE_COUNT=$(grep -v -c '^!' radical-White.txt \vert{}\vert{} echo 0)
+          WHITE_COUNT=$(grep -v -c '^!' radical-White.txt || echo 0)
 
           git commit -m "chore: 更新 README (radical)" \
                      -m "黑名单规则: ${BLOCK_COUNT} 条" \
