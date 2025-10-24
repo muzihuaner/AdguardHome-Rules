@@ -1,4 +1,4 @@
-name: 同时更新 平稳 与 激进 规则
+name: 更新 平稳 与 激进 规则
 
 permissions:
   contents: write
@@ -57,12 +57,12 @@ jobs:
         run: |
           BLOCK_COUNT=$(grep -v -c '^!' radical-Black.txt || echo 0)
           WHITE_COUNT=$(grep -v -c '^!' radical-White.txt || echo 0)
-          cat > release_body_radical.md <<EOF
-激进的规则（radical 分支）本次构建统计
-
-- 黑名单规则: ${BLOCK_COUNT} 条
-- 白名单规则: ${WHITE_COUNT} 条
-EOF
+          {
+            echo "激进的规则（radical 分支）本次构建统计"
+            echo
+            echo "- 黑名单规则: ${BLOCK_COUNT} 条"
+            echo "- 白名单规则: ${WHITE_COUNT} 条"
+          } > release_body_radical.md
 
       - name: Upload radical lists to GitHub Release
         uses: ncipollo/release-action@v1
@@ -75,8 +75,6 @@ EOF
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "radical-Black.txt,radical-White.txt"
-          omitBodyDuringUpdate: false
-          omitNameDuringUpdate: false
 
       - name: Commit and push README only to radical (safe rebase)
         run: |
@@ -148,12 +146,12 @@ EOF
         run: |
           BLOCK_COUNT=$(grep -v -c '^!' Black.txt || echo 0)
           WHITE_COUNT=$(grep -v -c '^!' White.txt || echo 0)
-          cat > release_body_main.md <<EOF
-平稳的规则（main 分支）本次构建统计
-
-- 黑名单规则: ${BLOCK_COUNT} 条
-- 白名单规则: ${WHITE_COUNT} 条
-EOF
+          {
+            echo "平稳的规则（main 分支）本次构建统计"
+            echo
+            echo "- 黑名单规则: ${BLOCK_COUNT} 条"
+            echo "- 白名单规则: ${WHITE_COUNT} 条"
+          } > release_body_main.md
 
       - name: Upload lists to GitHub Release (main)
         uses: ncipollo/release-action@v1
@@ -166,8 +164,6 @@ EOF
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "Black.txt,White.txt"
-          omitBodyDuringUpdate: false
-          omitNameDuringUpdate: false
 
       - name: Commit and push README only to main (safe rebase)
         run: |
