@@ -31,6 +31,7 @@ block_source_urls = {
     "github520": "https://raw.hellogithub.com/hosts",
     "GitHub Hosts": "https://github-hosts.tinsfox.com/hosts",
     "Malicious URL Blocklist": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt",
+    "xndeye adblock_list": "https://raw.githubusercontent.com/xndeye/adblock_list/refs/heads/release/easylist.txt",
     "Menghuibanxian": "https://raw.githubusercontent.com/Menghuibanxian/AdguardHome/refs/heads/main/Black.txt"
 }
 
