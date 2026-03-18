@@ -6,7 +6,7 @@
 
 本项目通过 GitHub Actions 自动合并、去重多个来源的 AdGuard Home 规则，并排除白名单。
 
-最后更新时间: 2026-03-18 09:46:42 (UTC+8)
+最后更新时间: 2026-03-18 10:00:20 (UTC+8)
 
 最终黑名单规则数: 9617857
 
@@ -17,13 +17,13 @@
 拦截规则 (Blocklist)
 
 ```
-https://github.com/zhuanshenlikaini/AdguardHome-Rules/releases/download/aggressive-latest/radical-Black.txt
+https://github.com/muzihuaner/AdguardHome-Rules/releases/download/aggressive-latest/radical-Black.txt
 ```
 
 允许规则 (Whitelist)
 
 ```
-https://github.com/zhuanshenlikaini/AdguardHome-Rules/releases/download/aggressive-latest/radical-White.txt
+https://github.com/muzihuaner/AdguardHome-Rules/releases/download/aggressive-latest/radical-White.txt
 ```
 
 规则来源
